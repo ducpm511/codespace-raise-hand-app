@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Host Page</title>
+</head>
+<body>
+  <h1>Host Page</h1>
+  <p>Session PIN: <span id="pin-display"></span></p>
+  <button onclick="startSession()">Start Session</button>
+  <ul id="player-list"></ul>
+  <button onclick="resetPlayerList()">Reset Player List</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Cập nhật danh sách người chơi
+    function updatePlayerList(players) {
+      const playerList = document.getElementById('player-list');
+      playerList.innerHTML = '';
+      for (const player of players) {
+        const li = document.createElement('li');
+        li.textContent = `${player.nickname} - Raised Hand: ${player.raisedHand ? 'Yes' : 'No'}`;
+        playerList.appendChild(li);
+      }
+    }
+
+    // Socket.IO: Xử lý sự kiện khi nhận được mã PIN từ server
+    socket.on('sessionPIN', (pin) => {
+      const pinDisplay = document.getElementById('pin-display');
+      pinDisplay.textContent = pin;
+    });
+
+    // Socket.IO: Xử lý sự kiện khi có thông tin danh sách người chơi đã tham gia
+    socket.on('updatePlayerList', (players) => {
+      updatePlayerList(players);
+    });
+
+    // Khởi động phiên chơi
+    function startSession() {
+      socket.emit('startSession');
+    }
+
+    // Reset danh sách người chơi
+    function resetPlayerList() {
+      socket.emit('resetPlayerList');
+    }
+
+    // Socket.IO: Xử lý sự kiện khi có thông báo reset danh sách người chơi thành công
+    socket.on('resetPlayerListSuccess', () => {
+      console.log('Player list reset successful');
+    });
+
+    // Socket.IO: Xử lý sự kiện khi có thông báo reset danh sách người chơi không thành công
+    socket.on('resetPlayerListFailure', () => {
+      console.log('Player list reset failed');
+    });
+  </script>
+</body>
+</html>

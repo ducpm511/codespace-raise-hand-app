@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Page</title>
+</head>
+<body>
+  <h1>User Page</h1>
+  <input type="text" id="pin-input" placeholder="Enter PIN">
+  <input type="text" id="nickname-input" placeholder="Enter nickname">
+  <button onclick="joinSession()">Join Session</button>
+  <p>Status: <span id="status"></span></p>
+  <ul id="player-list"></ul>
+  <button onclick="raiseHand()">Raise Hand</button>
+  <button onclick="cancelRaiseHand()">Cancel Raise Hand</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Cập nhật trạng thái join session
+    function updateJoinStatus(status) {
+      const joinStatus = document.getElementById('status');
+      joinStatus.textContent = status;
+    }
+
+    // Cập nhật danh sách người chơi và trạng thái dơ tay
+    function updatePlayerList(players) {
+      const playerList = document.getElementById('player-list');
+      playerList.innerHTML = '';
+      for (const player of players) {
+        const li = document.createElement('li');
+        li.textContent = `${player.nickname} - Raised Hand: ${player.raisedHand ? 'Yes' : 'No'}`;
+        playerList.appendChild(li);
+      }
+    }
+
+    // Socket.IO: Xử lý sự kiện khi có thông báo join thành công
+    socket.on('joinSuccess', () => {
+      updateJoinStatus('Joined session');
+    });
+
+    // Socket.IO: Xử lý sự kiện khi có thông báo join không thành công
+    socket.on('joinFailure', () => {
+      updateJoinStatus('Invalid PIN');
+    });
+
+    // Socket.IO: Xử lý sự kiện khi có thông tin danh sách người chơi và trạng thái dơ tay
+    socket.on('updatePlayerList', (players) => {
+      updatePlayerList(players);
+    });
+
+    // Gửi yêu cầu join session
+    function joinSession() {
+      const pin = document.getElementById('pin-input').value;
+      const nickname = document.getElementById('nickname-input').value;
+      socket.emit('join', { pin, nickname });
+    }
+
+    // Gửi yêu cầu dơ tay
+    function raiseHand() {
+      socket.emit('raiseHand');
+    }
+
+    // Gửi yêu cầu huỷ bỏ dơ tay
+    function cancelRaiseHand() {
+      socket.emit('cancelRaiseHand');
+    }
+  </script>
+</body>
+</html>
